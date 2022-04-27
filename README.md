@@ -11,3 +11,34 @@
 Initial step when solving the problem will be to get hands on experience with
 the toolkit and some basics of RL. So probably we will start from playing with 
 examples.
+
+## Installation steps and potential cavetas
+
+### PyTorch
+
+Start from installing PyTorch, ideally operate in virtual enviroment [PyTorch local installation](https://pytorch.org/get-started/locally/):
+For ubuntu 20.04 use pip3 command:
+```
+$ pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
+```
+This will install PyTorch with Pip package manager and with CUDA 11.3 support 
+for Ubuntu 20.04. If You do not have a graphics card with CUDA support or use
+other operating system refer to [documentation](https://pytorch.org/get-started/locally/).
+**Make sure that You pick correct system and correct CUDA support!**
+
+### Open AI Gym
+Simply run a command:
+```
+$ pip3 install gym
+```
+For details refer to [documentation](https://gym.openai.com/docs/)
+
+### Stable Baselines3 
+Simply run a command:
+```
+$ pip3 install stable-baselines3[extra]
+```
+For details refer to [documentation](https://stable-baselines3.readthedocs.io/en/master/guide/install.html)
+
+
+
