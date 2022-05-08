@@ -15,13 +15,13 @@ examples.
 ## Installation steps and potential cavetas
 
 When installed with pipenv (regular Python venvs manager), there were some [errors](https://stackoverflow.com/questions/44198228)
-with LunarLander example. Additional packages necessary were missing and the 
-easiest way to install them was to use Anaconda package manager for data science.
-So there will be shown an alternative way of installation 
-with conda packet manager and **I would recommend using conda.**
+with LunarLander example. Additional necessary packages were missing and the 
+easiest and most coherent way to install them was to use Anaconda package manager 
+for data science. So I would recommend using conda. [conda installation guide](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
+and [getting started with conda guide](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html)
 
 conda and pip [should not be used together](https://www.anaconda.com/blog/using-pip-in-a-conda-environment)
-as they might produce hard to reproduce state and may break some things. This is
+as they might create hard to reproduce state and may break some things. This is
 due a fact that conda cannot manage a packages installed via other package 
 managers. 
 
@@ -31,10 +31,6 @@ managers.
 
 Start from installing PyTorch:
 ```
-# pip and PyPI
-$ pip3 install torch torchvision torchaudio --extra-index-url https://download.pytorch.org/whl/cu113
-
-# Or with conda: 
 $ conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
 ```
 This will install PyTorch with CUDA 11.3 support 
@@ -42,29 +38,36 @@ for Ubuntu 20.04. If You do not have a graphics card with CUDA support or use
 other operating system refer to [documentation](https://pytorch.org/get-started/locally/).
 **Make sure that You pick correct system and correct CUDA support!**
 
+
 ### Open AI Gym
 Simply run a command:
 ```
-# pip and PyPI
-$ pip3 install gym
-
-# Or with conda:
 $ conda install -c conda-forge gym 
 ```
 For details refer to [gym](https://gym.openai.com/docs/) or 
 [conda gym installation documentation](https://anaconda.org/conda-forge/gym)
 
+
 ### Stable Baselines3 
 Simply run a command:
 ```
-# pip and PyPI
-$ pip3 install stable-baselines3[extra]
-
-# Or with conda:
 $ conda install -c conda-forge stable-baselines3 
 ```
 For details refer to [documentation](https://stable-baselines3.readthedocs.io/en/master/guide/install.html)
 or [conda sb3 installation documentation](https://anaconda.org/conda-forge/stable-baselines3)
+
+
+### Fixing missing dependencies
+At this point, theoretically environment should be ready to go, but there are 
+still some [dependencies missing](https://stackoverflow.com/questions/44198228/)
+(at least for LunarLander but maybe for more envs) so install them with the
+following commands:
+```
+$ conda install -c anaconda swig
+$ conda install -c conda-forge gym-box2d
+```
+Now, there should be no errors when running examples.
+
 
 ## Relevant examples and experimenting scenarios
 - [LunarLander-v2](https://gym.openai.com/envs/LunarLander-v2/) - one of examples provided in **Materials** section uses that scenario to explain basic RL concepts and training strategies
