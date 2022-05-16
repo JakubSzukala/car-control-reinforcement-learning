@@ -1,7 +1,9 @@
 # Car control with reinforcement learning 
 
 ## Materials
+
 #### Some relevant materials on reinforcement learning
+
 - [PyTorch](https://pytorch.org/)
 - [Stable baselines3 - like sklearn but for RL, lot of abstraction, backend in PyTorch](https://github.com/DLR-RM/stable-baselines3)
 - [Open AI Gym - Toolkit for reinforcement learning](https://gym.openai.com/)
@@ -9,6 +11,7 @@
 - [Intro to RL and Stable Baselines + AI Gym](https://www.youtube.com/watch?v=XbWhJdQgi7E&list=PLQVvvaa0QuDf0O2DWwLZBfJeYY-JOeZB1)
 
 #### Materials from supervisor
+
 - [Reinforcement learning DQN algorithm tutorial](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
 - [Example of DQN car racing in Gym env](https://github.com/andywu0913/OpenAI-GYM-CarRacing-DQN/blob/master/resources/trial_600.gif)
 - [Example of DQN and multicar racing in Gym env](https://github.com/igilitschenski/multi_car_racing)
@@ -18,74 +21,99 @@ the toolkit and some basics of RL. So probably we will start from playing with
 examples.
 
 ## Installation steps and potential cavetas
-When installed with pipenv (regular Python venvs manager), there were some [errors](https://stackoverflow.com/questions/44198228)
-with LunarLander example. Additional necessary packages were missing and the 
-easiest and most coherent way to install them was to use Anaconda package manager 
-for data science. So I would recommend using conda. Check out [conda installation guide](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
-and [getting started with conda guide](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html)
 
-conda and pip [should not be used together](https://www.anaconda.com/blog/using-pip-in-a-conda-environment)
+When installed with pipenv (regular Python venvs manager), there were some [errors](https://stackoverflow.com/questions/44198228)
+with LunarLander and CarRacing examples. Additional necessary packages were 
+missing and the easiest and most coherent way to install them was to use 
+Anaconda package manager for data science. Check out [conda installation guide](https://docs.conda.io/projects/conda/en/latest/user-guide/install/linux.html)
+and [getting started with conda guide](https://docs.conda.io/projects/conda/en/latest/user-guide/getting-started.html)
+to install and get some basic understanding of conda package manager.
+
+conda and pip, in general, [should not be used together](https://www.anaconda.com/blog/using-pip-in-a-conda-environment)
 as they might create hard to reproduce state and may break some things. This is
 due a fact that conda cannot manage a packages installed via other package 
 managers. 
 
-**If You pick one, just stick with it to the end, do not merge or mix them.**
+**But, on some occassions, some packages may not be available from 
+conda or may not be in right version, in that case one can use conda and pip 
+together but some precauctions should be kept. The most important one is to 
+install packages with conda first and then install rest with pip.** 
 
-##### PyTorch
-Start from installing PyTorch:
-```
-$ conda install pytorch torchvision torchaudio cudatoolkit=11.3 -c pytorch
-```
-This will install PyTorch with CUDA 11.3 support 
-for Ubuntu 20.04. If You do not have a graphics card with CUDA support or use
-other operating system refer to [documentation](https://pytorch.org/get-started/locally/).
-**Make sure that You pick correct system and correct CUDA support!**
+We will use this approach to have *gym version 0.23* in which few errors with 
+CarRacing environment were resolved. Another thing to note here, is that we can
+not use Stable Baselines3 as it will downgrade gym to version 0.21 which has 
+some errors with CarRacing environment still not resolved.
 
+#### Summary of packages installed
 
-##### Open AI Gym
-Simply run a command:
-```
-$ conda install -c conda-forge gym 
-```
-For details refer to [gym](https://gym.openai.com/docs/) or 
-[conda gym installation documentation](https://anaconda.org/conda-forge/gym)
+* Pytorch with cudatoolkit 11.3 (version for ubuntu 20.04 check if You have the same OS and GPU support) 
+* Open AI gym version 0.23
+* Swig
+* Pygame
+* gym-box2d
+* \+ all the auto installed dependencies
 
+If You want details about what is installed and in what version, check out 
+the [environment.yml file](./environment.yml) containing conda envrionment 
+informations and used for installation purposes.
 
-##### Stable Baselines3 
-Simply run a command:
-```
-$ conda install -c conda-forge stable-baselines3 
-```
-For details refer to [documentation](https://stable-baselines3.readthedocs.io/en/master/guide/install.html)
-or [conda sb3 installation documentation](https://anaconda.org/conda-forge/stable-baselines3)
+In case of any doubts or errors visit appropriate docs site:
+* [Pytorch installation docs](https://pytorch.org/get-started/locally/) 
+* [Open AI Gym docs](https://gym.openai.com/docs/)
+* [Conda managing environments docs](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands)
 
+### Environment setup
 
-##### Fixing missing dependencies
-At this point, theoretically environment should be ready to go, but there are 
-still some [dependencies missing](https://stackoverflow.com/questions/44198228/)
-(at least for LunarLander but maybe for more envs) so install them with the
-following commands:
+conda offers very convinient envrionment setup using .yml file as a configuration
+file. In such file all the dependencies are included and order of installation 
+between conda / pip is also preserved. Such file was prepared and included in 
+the repository. To install the envrionment clone the repository and from the 
+repository directory create a conda enviroment:
 ```
-$ conda install -c anaconda swig
-$ conda install -c conda-forge gym-box2d
-$ conda install -c cogsci pygame 
+$ git clone https://github.com/JakubSzukala/car-control-reinforcement-learning.git
+$ cd car-control-reinforcement-learning/
+$ conda env create -n car-control-rl-env -f environment.yml
 ```
-Now, there should be no errors when running examples. **Check if You have the 
-version 0.21 so that we have newest version possible and all of us are on the 
-same page:**
+Wait for conda to install all the packages. New conda environment will be 
+called **car-control-rl-env** and You can check if it is available with:
 ```
-$ conda list | grep gym
+$ conda env list
 ```
-Check that bcs I got it downgraded somehow during the installation process to 
-0.19. Not sure why and at what point, but unninstalling and rerunning 
-installation commands fixed it. In case You have similar problem, run:
+It should output something similar to this:
 ```
-$ conda remove gym
-$ conda install -c conda-forge gym 
-$ conda install -c conda-forge gym-box2d
-```
+# conda environments:
+#
+base                  *  /home/js/Programms/anaconda3
+car-control-rl-env       /home/js/Programms/anaconda3/envs/car-control-rl-env
 
-## TODO: when all working, compile into one convinient script
+```
+Then activate it with:
+```
+$ conda activate car-control-rl-env
+```
+Succesfully activated environment is indicated by a prefix in the command line
+with the name of the environment in brackets.
+
+**Remember to activate the environment every time You work on the project.**
+
+As a sanity check, You can run from within activated car-control-rl-env:
+```
+$ conda list | grep -E 'gym|swig|pygame|pytorch|box2d'
+```
+This should list most critical packages and their versions.
+
+Deciding test if the environment is correctly configured is to run a demo of 
+CarRacing. To do so, clone **to separate** directory gym repository and run 
+CarRacing demo in which You can control the car:
+```
+$ git clone https://github.com/openai/gym.git
+$ cd gym
+$ python gym/envs/box2d/car_racing.py
+```
+If it runs without errors then the environment should be correctly configured:
+![succesful run](./img/running_sim.png)
+**Remember to always have the car-control-rl-env activated.** Think of it as 
+a ros's 'source devel/setup.bash'. Without it, the environment will not work.
 
 ### Relevant examples and experimenting scenarios
 - [LunarLander-v2](https://gym.openai.com/envs/LunarLander-v2/) - one of examples provided in **Materials** section uses that scenario to explain basic RL concepts and training strategies
@@ -99,9 +127,11 @@ net, with crossroads traffic lights maybe some car traffic
 - Procedural generation of road system may be a separate project itself so maybe
 it is a little overkill, but inspiration for that was *relative* simplicity of
 a car racing env
-- But maybe taking a 'satelite' images of some cities and simplifying them to 
+- But maybe taking a 'satelite' photos of some cities and simplifying them to 
 feed them into an algorithm could be feasible. Simplification probably could be
-quite straight forward with OpenCV. 
+quite straight forward with OpenCV. For example: 
+![hi](./img/clean_sat_photo.png)
+
 
 ## Algorithm development
 
