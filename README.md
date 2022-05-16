@@ -163,8 +163,15 @@ def process_state_image(state):
     return state
 ```
 Probably some middle ground will be the best choice, as simplification of the 
-input in official pytorch tutorial seems very appealing.
+input in official pytorch tutorial seems very appealing. 
 
+Initial results of the input image from the eye test look pretty good:
+![initialinput](img/initial_input_img.png)
+
+Some initial remarks:
+* The return function is blurry and unreadable so maybe mask it somehow? To not distract / create some random correlation
+* Other drive statistics are barely visible, will have to see when the car actually drives but maybe they can stay?
+* Rest of the image seems to have satisfying quality
 
 
 
