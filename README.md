@@ -172,6 +172,6 @@ Some initial remarks:
 * The return function is blurry and unreadable so maybe mask it somehow? To not distract / create some random correlation
 * Other drive statistics are barely visible, will have to see when the car actually drives but maybe they can stay?
 * Rest of the image seems to have satisfying quality
-
+* Make it to Gray scale?
 
 
