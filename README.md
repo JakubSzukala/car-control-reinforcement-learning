@@ -5,6 +5,7 @@
 #### Some relevant materials on reinforcement learning
 
 - [PyTorch](https://pytorch.org/)
+- [PyTorch examples tutorial](https://pytorch.org/tutorials/beginner/pytorch_with_examples.html)
 - [Stable baselines3 - like sklearn but for RL, lot of abstraction, backend in PyTorch](https://github.com/DLR-RM/stable-baselines3)
 - [Open AI Gym - Toolkit for reinforcement learning](https://gym.openai.com/)
 - [SB3 Zoo - Alternative to Open AI Gym speciffically for SB3](https://github.com/DLR-RM/rl-baselines3-zoo)
@@ -169,9 +170,33 @@ Initial results of the input image from the eye test look pretty good:
 ![initialinput](img/initial_input_img.png)
 
 Some initial remarks:
-* The return function is blurry and unreadable so maybe mask it somehow? To not distract / create some random correlation
+* The return function is blurry and unreadable so maybe mask it somehow? To not distract / create some random correlation. **Probably not necessary, can be extracted from env.**
 * Other drive statistics are barely visible, will have to see when the car actually drives but maybe they can stay?
 * Rest of the image seems to have satisfying quality
 * Make it to Gray scale?
+
+#### Replay memory
+In [pytorch tutorial](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
+they use a **replay memory** for DQN training. Replay memory is a approach, in which
+we store the **transitions** of the environment state. It can be described as a
+tuple in following form:
+
+![src: https://deeplizard.com/learn/video/Bcuj2fTH4_4](img/experience_formula.png)
+* *st* - state at time *t*
+* *at* - action at time *t*
+* *rt+1* - reward at time *t+1* given to the agent as result of previous state / action pair
+* *st+1* - next state of the environment at *t+1*
+
+So a lot of such tuples compose a replay memory. From it, we randomly sample 
+to train our network. Such act is called **experience replay**.
+
+**Most important result of using this technique, is decorrelation of the data.**
+ 
+
+#### Q-network
+
+According to [pytorch tutorial](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
+our network will take as an input a difference between current and previous 
+patches, taken from **replay memory**.
 
 

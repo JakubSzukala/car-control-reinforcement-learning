@@ -34,3 +34,47 @@ class ReplayMemory(object):
     def __len__(self):
         return len(self.memory)
 
+class DQN(nn.Module):
+    # TODO: this is up for experimentation
+    def __init__(self, c, h, w, outputs, device):
+        super(DQN, self).__init__()
+        self.conv1 = nn.Conv2d(
+                in_channels=c,   # gray
+                out_channels=16, # arbitrary? 
+                kernel_size=5,   # arbitrary? 
+                stride=2)        # arbitrary? 
+        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
+        self.bn2 = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
+        self.bn3 = nn.BatchNorm2d(32)
+        
+        # TODO: we should examine that so we understand linear algebra behind
+        def conv2d_size_out(size, kernel_size = 5, stride = 2):
+            return (size - (kernel_size - 1) - 1) // stride  + 1
+        
+        # Initialization  
+        convw = w
+        convh = h
+        
+        # Is the range in c correct?
+        for _ in range(c):
+            convw = conv2d_size_out(convw)
+            convh = conv2d_size_out(convh)
+
+        linear_input_size = convw * convh * 32
+        self.head = nn.Linear(linear_input_size, outputs)
+
+
+    def forward(self, x):
+        """
+        Receive a Tensor containing the input and return a Tensor containing
+        the outptut.
+        """
+        x = x.to(self.device)
+        x = F.relu(self.bn1(self.conv1(x)))
+        x = F.relu(self.bn2(self.conv2(x)))
+        x = F.relu(self.bn3(self.conv3(x)))
+        return self.head(x.view(x.size(0), -1))  
+
+
