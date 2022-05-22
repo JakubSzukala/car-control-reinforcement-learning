@@ -10,8 +10,10 @@ import numpy as np
 resize = T.Compose([
     T.ToPILImage(),
     T.Resize((96, 96), interpolation=Image.CUBIC), # Proposed in example size
-    T.ToTensor() # tensor with shape (CxHxW) in range(0, 1) care for type!
+    T.ToTensor(), # tensor with shape (CxHxW) in range(0, 1) care for type!
     ])
+
+cvt_grayscale = T.Grayscale()
 
 def get_screen(env):
     """
@@ -21,15 +23,15 @@ def get_screen(env):
     """
     screen = env.render(mode='rgb_array').transpose((2, 0, 1))
     
-    # Maybe TODO: here crop the image?
-    # Maybe width too big and unnecessary?
-    # But does the image have to be square?
-    
     # ascontiguousarray makes sure that array is continous in memory
     screen = np.ascontiguousarray(screen, dtype=np.float32)/255
     screen = torch.from_numpy(screen) # Tensor from np array
     
+    resized = resize(screen)
+    gray = cvt_grayscale(resized)
+     
     # Unsqueeze is for adding batch dim at 0 position (new axis) but why?
-    return resize(screen).unsqueeze(0)
+    return gray.unsqueeze(0)
+
 
 
