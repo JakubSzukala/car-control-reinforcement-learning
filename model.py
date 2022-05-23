@@ -12,6 +12,11 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 
+"""
+################################################################################
+# Replay Memory 
+################################################################################
+"""
 # same as tuple, but access by name, self documentation and neat __repr__
 Transition = namedtuple('Transition', 
         ('state', 'action', 'next_state', 'reward'))
@@ -34,6 +39,11 @@ class ReplayMemory(object):
     def __len__(self):
         return len(self.memory)
 
+"""
+################################################################################
+# Model definition 
+################################################################################
+"""
 class DQN(nn.Module):
     # TODO: this is up for experimentation
     def __init__(self, c, h, w, outputs, device):
@@ -76,5 +86,29 @@ class DQN(nn.Module):
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
         return self.head(x.view(x.size(0), -1))  
+
+"""
+################################################################################
+# Training 
+################################################################################
+"""
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
