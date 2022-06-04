@@ -10,6 +10,9 @@
 - [Open AI Gym - Toolkit for reinforcement learning](https://gym.openai.com/)
 - [SB3 Zoo - Alternative to Open AI Gym speciffically for SB3](https://github.com/DLR-RM/rl-baselines3-zoo)
 - [Intro to RL and Stable Baselines + AI Gym](https://www.youtube.com/watch?v=XbWhJdQgi7E&list=PLQVvvaa0QuDf0O2DWwLZBfJeYY-JOeZB1)
+- [RL Bootcamp - YT playlist](https://www.youtube.com/playlist?list=PLAdk-EyP1ND8MqJEJnSvaoUShrAWYe51U)
+- [PPO algorithm and nicely prepped env](https://github.com/elsheikh21/car-racing-ppo)
+- [Hierarchical RL for CarRacing](https://notanymike.github.io/HRL/)
 
 #### Materials from supervisor
 
@@ -40,7 +43,7 @@ conda or may not be in right version, in that case one can use conda and pip
 together but some precauctions should be kept. The most important one is to 
 install packages with conda first and then install rest with pip.** 
 
-We will use this approach to have *gym version 0.23* in which few errors with 
+We will use this approach to have *gym version 0.24* in which few errors with 
 CarRacing environment were resolved. Another thing to note here, is that we can
 not use Stable Baselines3 as it will downgrade gym to version 0.21 which has 
 some errors with CarRacing environment still not resolved.
@@ -63,6 +66,7 @@ In case of any doubts or errors visit appropriate docs site:
 * [Open AI Gym docs](https://gym.openai.com/docs/)
 * [Conda managing environments docs](https://docs.conda.io/projects/conda/en/latest/user-guide/tasks/manage-environments.html#creating-an-environment-with-commands)
 
+
 ### Environment setup
 
 conda offers very convinient envrionment setup using .yml file as a configuration
@@ -75,6 +79,14 @@ $ git clone https://github.com/JakubSzukala/car-control-reinforcement-learning.g
 $ cd car-control-reinforcement-learning/
 $ conda env create -n car-control-rl-env -f environment.yml
 ```
+
+If on the other hand, one would like to export the environment state to such 
+configuration file simply run:
+```
+$ conda env export > environment.yml
+```
+Mind that this will overwrite the existing file.
+
 Wait for conda to install all the packages. New conda environment will be 
 called **car-control-rl-env** and You can check if it is available with:
 ```
@@ -198,5 +210,46 @@ to train our network. Such act is called **experience replay**.
 According to [pytorch tutorial](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html)
 our network will take as an input a difference between current and previous 
 patches, taken from **replay memory**.
+
+Initially, our network will consist of 3 convolutional layers with batch 
+normalization in between. This is up for change. Parameters were taken from 
+[pytorch tutorial](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html).
+
+
+#### Training procedure
+Here we again follow the receipe from [pytorch tutorial](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html).
+
+In the tutorial, they present a function *select_action* that will pick an action 
+to take. And there are two possibilities here:
+* Random action will be chosen from uniform distribution
+* Model will be used to pick the action
+
+At the beginning we will pick the actions randomly, so that our model will have 
+a chance to learn and modify its weights / biases. Later we will use the model more often
+to choose an action and will check its performance. The rate at which this process
+will change is defined with use of parameters EPS_START, EPS_END and EPS_DECAY.
+This parameters defines a probability of choosing a random action and will decay 
+over time until EPS_END with rate of EPS_DECAY. **This is up for tuning too.**
+This basically defines a rate of change between exploration and exploitation.
+
+For the starter, we will create an environment as a discrete:
+
+```python
+env = gym.make('CarRacing-v1', continous=False)
+```
+
+This will change continous action space into:
+
+```python
+[do nothing, left, right, gas, brake]
+```
+
+Actually there was weird error in the environment, as we primarily had version
+0.23 of gym and it allowed creating the CarRacing-v1 environment despite it not being 
+available in this version! This caused a lot of confusion and came up when passing argument
+continous=False, it was throwing error that the argument is not correct. Upgrading
+gym to 0.24 which already has a CarRacing-v1 solved the issue.
+
+
 
 
