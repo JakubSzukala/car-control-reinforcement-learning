@@ -74,6 +74,7 @@ class DQN(nn.Module):
 
         linear_input_size = convw * convh * 32
         self.head = nn.Linear(linear_input_size, outputs)
+        self.device = device
 
 
     def forward(self, x):
@@ -81,6 +82,7 @@ class DQN(nn.Module):
         Receive a Tensor containing the input and return a Tensor containing
         the outptut.
         """
+        print(self.device)
         x = x.to(self.device)
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
@@ -93,6 +95,7 @@ class DQN(nn.Module):
 ################################################################################
 """
 
+    
 
 
 

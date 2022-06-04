@@ -13,6 +13,8 @@
 - [RL Bootcamp - YT playlist](https://www.youtube.com/playlist?list=PLAdk-EyP1ND8MqJEJnSvaoUShrAWYe51U)
 - [PPO algorithm and nicely prepped env](https://github.com/elsheikh21/car-racing-ppo)
 - [Hierarchical RL for CarRacing](https://notanymike.github.io/HRL/)
+- [Tensorflow alternative with Keras](https://keras.io/examples/rl/deep_q_network_breakout/)
+- [Technical note on Q - learning](https://link.springer.com/content/pdf/10.1007/BF00992698.pdf)
 
 #### Materials from supervisor
 
