@@ -27,11 +27,11 @@ def get_screen(env):
     screen = np.ascontiguousarray(screen, dtype=np.float32)/255
     screen = torch.from_numpy(screen) # Tensor from np array
     
-    resized = resize(screen)
-    gray = cvt_grayscale(resized)
+    out = resize(screen)
+    #out = cvt_grayscale(out)
      
     # Unsqueeze is for adding batch dim at 0 position (new axis) but why?
-    return gray.unsqueeze(0)
+    return out.unsqueeze(0)
 
 
 
