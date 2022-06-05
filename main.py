@@ -38,7 +38,9 @@ EPS_END = 0.05
 EPS_DECAY = 200
 TARGET_UPDATE = 10
 
-init_screen = get_screen(env)
+AS_GRAY = True 
+
+init_screen = get_screen(env, as_gray=AS_GRAY)
 _, channels, screen_h, screen_w = init_screen.shape
 n_actions = env.action_space.n # type: ignore 
 
@@ -126,12 +128,12 @@ def optimize_model(memory, device, policy_net, target_net, optimizer):
     optimizer.step()
 
 
-for n_episode in range(60):
+for n_episode in range(90):
     total_reward = 0
     # Getting input 
     env.reset()
-    last_screen = get_screen(env)
-    current_screen = get_screen(env) 
+    last_screen = get_screen(env, as_gray=AS_GRAY)
+    current_screen = get_screen(env, as_gray=AS_GRAY) 
     state = current_screen - last_screen
     for t in count():
         action = select_action(state)
@@ -141,7 +143,7 @@ for n_episode in range(60):
 
         # Observe new state
         last_screen = current_screen
-        current_screen = get_screen(env)
+        current_screen = get_screen(env, as_gray=AS_GRAY)
         if not done:
             next_state = current_screen - last_screen
         else:
@@ -152,8 +154,9 @@ for n_episode in range(60):
 
         optimize_model(memory, device, policy_net, target_net, optimizer)
         if done:
-            print('Total reward gained: {} for episode {}: and duration: {}'.format(
-                total_reward, n_episode, t+1))
+            print('Total reward gained: {}'\
+                  'for episode {}: and duration: {}'.format(
+                      total_reward, n_episode, t+1))
             episode_durations.append(t + 1)
             # TODO: we do not care about duration.... that much plot smth more relevant
             #plot_durations()
