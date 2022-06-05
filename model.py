@@ -68,12 +68,16 @@ class DQN(nn.Module):
         convh = h
         
         # Is the range in c correct?
-        for _ in range(c):
+        for _ in range(3):
             convw = conv2d_size_out(convw)
             convh = conv2d_size_out(convh)
+            print(convw)
+            print(convh)
+        print('end')
 
         linear_input_size = convw * convh * 32
         self.head = nn.Linear(linear_input_size, outputs)
+        print(linear_input_size)
         self.device = device
 
 
