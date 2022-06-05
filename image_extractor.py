@@ -20,7 +20,8 @@ def get_screen(env, as_gray=False):
     Image captured is of size (400, 600, 3) so it has to be converted into
     torch order (CHW):
     (400, 600, 3) -> (3, 400, 600)
-    """
+    """ 
+    # TODO: maybe don't render as rgb but straight to gray? faster?
     screen = env.render(mode='rgb_array').transpose((2, 0, 1))
     
     # ascontiguousarray makes sure that array is continous in memory

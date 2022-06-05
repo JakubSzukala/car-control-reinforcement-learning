@@ -1,6 +1,7 @@
 import gym
 import matplotlib
 import matplotlib.pyplot as plt
+import numpy as np
 
 import torch
 import torch.nn as nn
@@ -14,6 +15,8 @@ from model import Transition
 import random
 import math
 from itertools import count
+from collections import deque
+import copy
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -56,6 +59,7 @@ memory = ReplayMemory(10000)
 
 steps_done = 0
 
+# TODO: change this global EPS_START etc...
 def select_action(state):
     global steps_done 
     sample = random.random()
@@ -73,6 +77,8 @@ def select_action(state):
 
 episode_durations = []
 
+
+# TODO: change to plot rewards or dist or smth like that 
 def plot_durations():
     plt.figure(2)
     plt.clf()
@@ -128,28 +134,49 @@ def optimize_model(memory, device, policy_net, target_net, optimizer):
     optimizer.step()
 
 
+def queue2frame_stack(deque):
+    print(deque)
+    frame_stack = torch.tensor(deque)
+    print(frame_stack.shape)
+    # This should probably be in pytorch convention (CHW)? if not transpose?
+    return frame_stack
+
+
 for n_episode in range(90):
     total_reward = 0
+
     # Getting input 
     env.reset()
+    """
     last_screen = get_screen(env, as_gray=AS_GRAY)
     current_screen = get_screen(env, as_gray=AS_GRAY) 
     state = current_screen - last_screen
+    """
+    # State is 3 previous frames stacked together and fed to the network
+    # Credits: https://github.com/andywu0913/OpenAI-GYM-CarRacing-DQN
+    # TODO: improve this, remove hard coding and abstract it
+    state_queue = deque([get_screen(env, as_gray=AS_GRAY) * 3],
+            maxlen=3)
     for t in count():
+        # Convert current frames q into state
+        state = queue2frame_stack(state_queue)
+        next_state = state # temporary
+
         action = select_action(state)
-        _, reward, done, _ = env.step(action.item())
+        _, reward, done, _ = env.step(action.item()) # type: ignore
         reward = torch.tensor([reward], device=device)
         total_reward += reward
 
         # Observe new state
-        last_screen = current_screen
-        current_screen = get_screen(env, as_gray=AS_GRAY)
+        next_frame = get_screen(env, as_gray=AS_GRAY)
         if not done:
-            next_state = current_screen - last_screen
-        else:
-            next_state = None
-
+            # Add to state q new frame and convert it into new state
+            state_queue.append(next_frame)
+            next_state = queue2frame_stack(state_queue)
+        
+        # Add to replay memory 
         memory.push(state, action, next_state, reward)
+        
         state = next_state
 
         optimize_model(memory, device, policy_net, target_net, optimizer)
@@ -158,7 +185,8 @@ for n_episode in range(90):
                   'for episode {}: and duration: {}'.format(
                       total_reward, n_episode, t+1))
             episode_durations.append(t + 1)
-            # TODO: we do not care about duration.... that much plot smth more relevant
+            # TODO: we do not care about duration.... 
+            # that much plot smth more relevant
             #plot_durations()
             break
     

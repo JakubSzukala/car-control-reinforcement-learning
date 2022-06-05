@@ -343,6 +343,8 @@ TODOs:
 - [ ] Add plotting a reward across learning (essential)
 - [ ] For test runner add model to execute as command line argument
 - [ ] Decouple a little bit more the functions as they are quite hard coded (optional)
+- [ ] Add skipping initial frames as they may confuse the model (sliding down from above)
+- [ ] Add negative reward tolerance? When reward is < 0 after some steps, terminate the episode 
 
 
 
