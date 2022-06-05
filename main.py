@@ -16,7 +16,6 @@ import math
 from itertools import count
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(device)
 
 env = gym.make('CarRacing-v1', continuous=False)
 
@@ -86,7 +85,7 @@ def plot_durations():
         means = torch.cat((torch.zeros(99), means))
         plt.plot(means.numpy())
 
-    plt.pause(0.001)  # pause a bit so that plots are updated
+    plt.pause(1)  # pause a bit so that plots are updated
 
 
 def optimize_model(memory, device, policy_net, target_net, optimizer):
@@ -127,7 +126,8 @@ def optimize_model(memory, device, policy_net, target_net, optimizer):
     optimizer.step()
 
 
-for n_episode in range(1000):
+for n_episode in range(60):
+    total_reward = 0
     # Getting input 
     env.reset()
     last_screen = get_screen(env)
@@ -137,6 +137,7 @@ for n_episode in range(1000):
         action = select_action(state)
         _, reward, done, _ = env.step(action.item())
         reward = torch.tensor([reward], device=device)
+        total_reward += reward
 
         # Observe new state
         last_screen = current_screen
@@ -151,8 +152,11 @@ for n_episode in range(1000):
 
         optimize_model(memory, device, policy_net, target_net, optimizer)
         if done:
+            print('Total reward gained: {} for episode {}: and duration: {}'.format(
+                total_reward, n_episode, t+1))
             episode_durations.append(t + 1)
-            plot_durations()
+            # TODO: we do not care about duration.... that much plot smth more relevant
+            #plot_durations()
             break
     
     if n_episode % TARGET_UPDATE == 0:
@@ -161,8 +165,11 @@ for n_episode in range(1000):
 print('Complete')
 env.render()    
 env.close()
-plt.ioff()
-plt.show()
+#plt.ioff()
+#plt.show()
+# https://pytorch.org/tutorials/beginner/saving_loading_models.html#saving-loading-model-for-inference
+torch.save(target_net, './models/target_net.pt')
+torch.save(policy_net, './models/policy_net.pt')
 
 """
     # Displaying  

@@ -82,7 +82,6 @@ class DQN(nn.Module):
         Receive a Tensor containing the input and return a Tensor containing
         the outptut.
         """
-        print(self.device)
         x = x.to(self.device)
         x = F.relu(self.bn1(self.conv1(x)))
         x = F.relu(self.bn2(self.conv2(x)))
