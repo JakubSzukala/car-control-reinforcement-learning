@@ -322,3 +322,6 @@ buck-out/
 Pipfile
 Pipfile.lock
 pyrightconfig.json
+
+# Models
+models/
