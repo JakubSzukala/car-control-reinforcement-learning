@@ -5,6 +5,8 @@ import gym
 from model import DQN
 from image_extractor import get_screen
 
+AS_GRAY = True
+
 # Use CUDA 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -12,7 +14,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 env = gym.make('CarRacing-v1', continuous=False)
 
 # Prep model
-init_screen = get_screen(env)
+init_screen = get_screen(env, as_gray=AS_GRAY)
 _, channels, screen_h, screen_w = init_screen.shape
 n_actions = env.action_space.n # type: ignore 
 
@@ -22,8 +24,8 @@ model =  torch.load("models/target_net.pt")
 model.eval()
 
 env.reset()
-last_screen = get_screen(env)
-current_screen = get_screen(env) 
+last_screen = get_screen(env, as_gray=AS_GRAY)
+current_screen = get_screen(env, as_gray=AS_GRAY) 
 state = current_screen - last_screen
 
 for t in count():
@@ -36,7 +38,7 @@ for t in count():
     reward = torch.tensor([reward], device=device)
     
     last_screen = current_screen
-    current_screen = get_screen(env)
+    current_screen = get_screen(env, as_gray=AS_GRAY)
     if not done:
         next_state = current_screen - last_screen
     else:
