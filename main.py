@@ -135,8 +135,8 @@ def optimize_model(memory, device, policy_net, target_net, optimizer):
 
 
 def queue2frame_stack(deque):
-    print(deque)
-    frame_stack = torch.tensor(deque)
+    frame_stack = torch.cat(tuple(deque), 0)
+    frame_stack = torch.squeeze(frame_stack, 1)
     print(frame_stack.shape)
     # This should probably be in pytorch convention (CHW)? if not transpose?
     return frame_stack
