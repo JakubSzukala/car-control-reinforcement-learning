@@ -322,17 +322,20 @@ as it should be handled in our model.
 second iteration on my computer, suddenly the process was killed by a kernel due
 to using too much memory (including swap!).** The reason was clearly visible when 
 running:
+
 ```
 $ sudo dmesg
     [ 7366.987512] oom-kill:constraint=CONSTRAINT_NONE,nodemask=(null),cpuset=/,mems_allowed=0,global_oom,task_memcg=/user.slice/user-1000.slice/user@1000.service,task=python3,pid=18000,uid=1000
 [ 7366.987621] Out of memory: Killed process 18000 (python3) total-vm:27177916kB, anon-rss:14510316kB, file-rss:96488kB, shmem-rss:12288kB, UID:1000 pgtables:32784kB oom_score_adj:0
 ```
+
 Intrestingly, using single channel gray caused this problem and when using RGB 
 there was no such thing. Turning off the browser was enough for the model to learn,
 but I had barely enough memory for it.
 
 Results basically were the same for every test we did. The model was steering 
 very hard to the right:
+![second try](img/test_run2.gif)
 
 TODOs:
 - [ ] Change the approach of feeding the input to stacking 3 grayscale images (in new branch)
