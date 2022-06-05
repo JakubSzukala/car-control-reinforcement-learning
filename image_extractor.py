@@ -15,7 +15,7 @@ resize = T.Compose([
 
 cvt_grayscale = T.Grayscale()
 
-def get_screen(env):
+def get_screen(env, as_gray=False):
     """
     Image captured is of size (400, 600, 3) so it has to be converted into
     torch order (CHW):
@@ -28,8 +28,10 @@ def get_screen(env):
     screen = torch.from_numpy(screen) # Tensor from np array
     
     out = resize(screen)
-    #out = cvt_grayscale(out)
-     
+    
+    if as_gray:
+        out = cvt_grayscale(out)
+    
     # Unsqueeze is for adding batch dim at 0 position (new axis) but why?
     return out.unsqueeze(0)
 
