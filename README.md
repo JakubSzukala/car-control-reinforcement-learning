@@ -252,6 +252,29 @@ available in this version! This caused a lot of confusion and came up when passi
 continous=False, it was throwing error that the argument is not correct. Upgrading
 gym to 0.24 which already has a CarRacing-v1 solved the issue.
 
+#### First training 
 
+We implemented initial infrastructure for training the model. When running for 
+the first time, the gray scale input was breaking during the convolution due
+to some incorrect dimensions when using model structure like in [pytorch tutorial](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html).
+This is for solving with [this as an example](https://github.com/andywu0913/OpenAI-GYM-CarRacing-DQN/blob/master/CarRacingDQNAgent.py).
+In this example, author is using gray scale input so we can analyse theirs NN 
+structure. 
 
+So first training was for episodes n = 60 and as mentioned before with an input
+as RGB. The results were less than amazing and learning lasted for quite a long time,
+about ~70 mins. Highest reward that the model achieved was ~ -21 which means that
+it did not finish even one track tile (reward for visiting track tile is + 1000 / N).
+The car was at least not moving out of bounds because during the training it was not
+usually receiving reward of -100. 
+
+The first trained model is saved now and we will prepare a runner that will 
+showcase how it performs and what can be improved upon.
+
+#### Test runner results 
+
+Below on the gif is presented initialy tested model (on RGB images 60 iters):
+![test-run1]('img/test_run1.gif')
+It acts quite randomly not really reacting much. In the end it actually tries to
+turn left but it is very delayed.
 
