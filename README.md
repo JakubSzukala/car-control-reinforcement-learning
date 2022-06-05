@@ -259,7 +259,19 @@ the first time, the gray scale input was breaking during the convolution due
 to some incorrect dimensions when using model structure like in [pytorch tutorial](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html).
 This is for solving with [this as an example](https://github.com/andywu0913/OpenAI-GYM-CarRacing-DQN/blob/master/CarRacingDQNAgent.py).
 In this example, author is using gray scale input so we can analyse theirs NN 
-structure. 
+structure. Theirs network was implemented in tensorflow so copying 1:1 is not 
+the case:
+```python
+model = Sequential()
+model.add(Conv2D(filters=6, kernel_size=(7, 7), strides=3, activation='relu', input_shape=(96, 96, self.frame_stack_num)))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Conv2D(filters=12, kernel_size=(4, 4), activation='relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Flatten())
+model.add(Dense(216, activation='relu'))
+model.add(Dense(len(self.action_space), activation=None))
+model.compile(loss='mean_squared_error', optimizer=Adam(lr=self.learning_rate, epsilon=1e-7))
+```
 
 So first training was for episodes n = 60 and as mentioned before with an input
 as RGB. The results were less than amazing and learning lasted for quite a long time,
@@ -273,8 +285,23 @@ showcase how it performs and what can be improved upon.
 
 #### Test runner results 
 
-Below on the gif is presented initialy tested model (on RGB images 60 iters):
-![test-run1]('img/test_run1.gif')
+Below on the gif is presented initialy tested model on RGB images 60 iters and
+network structure as in [pytorch example](https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html):
+```python
+self.conv1 = nn.Conv2d(
+        in_channels=3,   
+        out_channels=16, 
+        kernel_size=5,   
+        stride=2)        
+self.bn1 = nn.BatchNorm2d(16)
+self.conv2 = nn.Conv2d(16, 32, kernel_size=5, stride=2)
+self.bn2 = nn.BatchNorm2d(32)
+self.conv3 = nn.Conv2d(32, 32, kernel_size=5, stride=2)
+self.bn3 = nn.BatchNorm2d(32)
+```
+
+![test-run1](img/test_run1.gif)
+
 It acts quite randomly not really reacting much. In the end it actually tries to
 turn left but it is very delayed.
 
