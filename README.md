@@ -346,7 +346,11 @@ TODOs:
 - [ ] Add skipping initial frames as they may confuse the model (sliding down from above)
 - [ ] Add negative reward tolerance? When reward is < 0 after some steps, terminate the episode 
 
-
+TOASKS:
+- How to use this stacked frames?
+- Better stacked frames or transitions?
+- Are params okay? Like learning rate etc.
+- Optimizer?
 
 
 
