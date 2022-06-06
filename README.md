@@ -355,7 +355,8 @@ TOASKS:
 - What to plot to nicely visualize progress? Moving average? On what span?
 - Cloud based learning?
 
-
+Change to binary processed with opencv
+or change from conv nn to fully connected and feed with distances to edges.
 
 
 
