@@ -345,13 +345,15 @@ TODOs:
 - [ ] Decouple a little bit more the functions as they are quite hard coded (optional)
 - [ ] Add skipping initial frames as they may confuse the model (sliding down from above)
 - [ ] Add negative reward tolerance? When reward is < 0 after some steps, terminate the episode 
+- [ ] Move this to some kind of journal.md instead of README
 
 TOASKS:
 - How to use this stacked frames?
 - Better stacked frames or transitions?
 - Are params okay? Like learning rate etc.
 - Optimizer?
-- What to plot to nicely visualize progress?
+- What to plot to nicely visualize progress? Moving average? On what span?
+- Cloud based learning?
 
 
 
