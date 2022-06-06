@@ -351,7 +351,7 @@ TOASKS:
 - Better stacked frames or transitions?
 - Are params okay? Like learning rate etc.
 - Optimizer?
-
+- What to plot to nicely visualize progress?
 
 
 
