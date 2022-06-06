@@ -48,8 +48,9 @@ _, channels, screen_h, screen_w = init_screen.shape
 n_actions = env.action_space.n # type: ignore 
 
 # https://stackoverflow.com/questions/54237327
-policy_net = DQN(channels, screen_h, screen_w, n_actions, device).to(device)
-target_net = DQN(channels, screen_h, screen_w, n_actions, device).to(device)
+# TODO this channels argument should be improved..
+policy_net = DQN(3, screen_h, screen_w, n_actions, device).to(device)
+target_net = DQN(3, screen_h, screen_w, n_actions, device).to(device)
 target_net.load_state_dict(policy_net.state_dict())
 target_net.eval() # enable evaluation mode
 
@@ -66,6 +67,7 @@ def select_action(state):
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
         math.exp(-1. * steps_done / EPS_DECAY)
     steps_done += 1
+    #print(state.shape)
     if sample > eps_threshold:
         with torch.no_grad():
             # largest col value of each row
@@ -137,7 +139,8 @@ def optimize_model(memory, device, policy_net, target_net, optimizer):
 def queue2frame_stack(deque):
     frame_stack = torch.cat(tuple(deque), 0)
     frame_stack = torch.squeeze(frame_stack, 1)
-    print(frame_stack.shape)
+    frame_stack = torch.unsqueeze(frame_stack, 0)
+    #print(frame_stack.shape)
     # This should probably be in pytorch convention (CHW)? if not transpose?
     return frame_stack
 
@@ -155,13 +158,13 @@ for n_episode in range(90):
     # State is 3 previous frames stacked together and fed to the network
     # Credits: https://github.com/andywu0913/OpenAI-GYM-CarRacing-DQN
     # TODO: improve this, remove hard coding and abstract it
-    state_queue = deque([get_screen(env, as_gray=AS_GRAY) * 3],
+    state_queue = deque([get_screen(env, as_gray=AS_GRAY)] * 3,
             maxlen=3)
     for t in count():
         # Convert current frames q into state
         state = queue2frame_stack(state_queue)
         next_state = state # temporary
-
+        
         action = select_action(state)
         _, reward, done, _ = env.step(action.item()) # type: ignore
         reward = torch.tensor([reward], device=device)
