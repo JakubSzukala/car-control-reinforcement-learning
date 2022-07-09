@@ -20,7 +20,7 @@ n_actions = env.action_space.n # type: ignore
 
 #model = DQN(channels, screen_h, screen_w, n_actions, device).to(device)
 
-model =  torch.load("models/target_net.pt")
+model = torch.load("models/target_net.pt")
 model.eval()
 
 env.reset()
