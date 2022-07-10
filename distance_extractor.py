@@ -33,7 +33,7 @@ SCREEN_WIDTH = SCREEN_HEIGHT = 300
 
 # Car position 
 CAR_X = int(SCREEN_WIDTH * 0.5)
-CAR_Y = int(SCREEN_HEIGHT * 0.8) # 0.6875
+CAR_Y = int(SCREEN_HEIGHT * 0.9) # 0.6875
 
 # Ranges get the road into binary image
 LOWERB = np.array([0, 0 ,0])
@@ -59,16 +59,19 @@ class Ray:
         # Calculate start and end coords for the line 
         self.start_x = x  
         self.start_y = y
-        self.end_x = int(round(1000 * math.cos(math.pi * angle_deg / 180.0))) + self.start_x
-        self.end_y = int(round(1000 * math.sin(math.pi * angle_deg / 180.0))) + self.start_y
+        self.end_x = None
+        self.end_y = None
+        self.init_end_x = int(round(1000 * math.cos(math.pi * angle_deg / 180.0))) + self.start_x
+        self.init_end_y = int(round(1000 * math.sin(math.pi * angle_deg / 180.0))) + self.start_y
         self.angle = angle_deg
         self.ray_matrice = np.zeros(img_shape)
         self.casted = None
+        self.distance = -1
 
         # Draw a line onto the ray_matrice
         cv.line(self.ray_matrice, # Inverted x/y?
                 (self.start_x, self.start_y),
-                (self.end_x, self.end_y), 125)
+                (self.init_end_x, self.init_end_y), 125)
     
     # TODO: make values of pixels as constants
     def cast(self, cont_img):
@@ -76,11 +79,16 @@ class Ray:
         #plt.imshow(self.casted)
         #plt.show()
     
-    def get_intersection(self):
+    def calculate_intersection(self):
         try:
             out = np.argwhere(self.casted == 250)
             if len(out) == 1:
-                return (out[0, 1], out[0, 0])
+                self.end_x = out[0, 1]
+                self.end_y = out[0, 0]
+                self.distance = math.sqrt(
+                            math.pow(self.start_x - out[0, 1], 2) + 
+                            math.pow(self.start_y - out[0, 0], 2))
+
             else:
                 smallest_distance = 1000
                 smallest_d_idx = -1
@@ -91,13 +99,20 @@ class Ray:
                     if dist < smallest_distance:
                         smallest_distance = dist
                         smallest_d_idx = idx
-                return (out[smallest_d_idx, 1],  out[smallest_d_idx, 0])
+                self.end_x = out[smallest_d_idx, 1]
+                self.end_y = out[smallest_d_idx, 0]
+                self.distance = smallest_distance
 
         except IndexError:
             print("No result of intersection for {}".format(self.angle))
             return
 
-    #def
+    def get_distance_int(self):
+        return int(self.distance)
+
+    def get_intersection(self):
+        return (self.end_x, self.end_y)
+
 
 
 if __name__ == '__main__':
@@ -107,9 +122,7 @@ if __name__ == '__main__':
     rays = {
             'ray0' : Ray(CAR_X, CAR_Y, 0, (SCREEN_HEIGHT, SCREEN_WIDTH)),
             'ray_p180' : Ray(CAR_X, CAR_Y, 180, (SCREEN_HEIGHT, SCREEN_WIDTH)),
-            'ray_p45' : Ray(CAR_X, CAR_Y, 45, (SCREEN_HEIGHT, SCREEN_WIDTH)),
             'ray_m45' : Ray(CAR_X, CAR_Y, -45, (SCREEN_HEIGHT, SCREEN_WIDTH)),
-            'ray_p135' : Ray(CAR_X, CAR_Y, 135, (SCREEN_HEIGHT, SCREEN_WIDTH)),
             'ray_m135' : Ray(CAR_X, CAR_Y, -135, (SCREEN_HEIGHT, SCREEN_WIDTH)),
             'ray_m90' : Ray(CAR_X, CAR_Y, -90, (SCREEN_HEIGHT, SCREEN_WIDTH))
             }
@@ -136,10 +149,13 @@ if __name__ == '__main__':
 
             # Cast rays
             temp = road_cont.copy()
+            print('##############################')
             for ray in rays.values():
                 ray.cast(road_cont)
+                ray.calculate_intersection()
+                distance = ray.get_distance_int()
+                print('For ray with angle: {}, distance is equal to: {}'.format(ray.angle, distance))
                 intersection = ray.get_intersection()
-                print(temp)
                 cv.line(temp, (ray.start_x, ray.start_y), intersection, 50, 1)
             
             cv.imshow('asdf', temp)
