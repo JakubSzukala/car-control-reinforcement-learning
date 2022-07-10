@@ -21,21 +21,24 @@ down)
 Consider what contours to draw:
     * all with -1? what if some false positives?
     * only the biggest with sorting? 
+When car goes out of the track, it will stop detecting intersections - stop the 
+training then.
 
 """
 
 # Constants 
 FRAMES_2_SKIP = 100
 
-SCREEN_WIDTH = SCREEN_HEIGHT = 300#95
+SCREEN_WIDTH = SCREEN_HEIGHT = 300
 
 # Car position 
-CAR_X = 47
-CAR_Y = 66
+CAR_X = int(SCREEN_WIDTH * 0.5)
+CAR_Y = int(SCREEN_HEIGHT * 0.8) # 0.6875
 
 # Ranges get the road into binary image
 LOWERB = np.array([0, 0 ,0])
-UPPERB = np.array([179, 120, 230])
+#UPPERB = np.array([179, 120, 230])
+UPPERB = np.array([179, 255, 122])
 
 
 def resize(rgb_img):
@@ -47,7 +50,8 @@ def resize(rgb_img):
 
 def get_bin_road(img):
     global LOWERB, UPPERB 
-    return cv.inRange(img, LOWERB, UPPERB)
+    hsv_img = cv.cvtColor(img, cv.COLOR_BGR2HSV)
+    return cv.inRange(hsv_img, LOWERB, UPPERB)
 
 
 class Ray:
@@ -57,7 +61,6 @@ class Ray:
         self.start_y = y
         self.end_x = int(round(1000 * math.cos(math.pi * angle_deg / 180.0))) + self.start_x
         self.end_y = int(round(1000 * math.sin(math.pi * angle_deg / 180.0))) + self.start_y
-        print("X: ", self.end_x, " Y: ", self.end_y)
         self.angle = angle_deg
         self.ray_matrice = np.zeros(img_shape)
         self.casted = None
@@ -116,15 +119,15 @@ if __name__ == '__main__':
             
             # Draw only the contour
             road_cont = np.zeros(shape=screen_96_96.shape[:2])
-            cv.drawContours(road_cont, contours, -1, 125, 1) # TODO change 125 to constant
+            cv.drawContours(road_cont, contours, -1, 125, 5) # TODO change 125 to constant
 
             # Cast rays
             temp = road_cont.copy()
             for ray in rays.values():
                 ray.cast(road_cont)
                 intersection = ray.get_intersection()
-                print(intersection)
-                cv.circle(temp, intersection, 5, 150, -1)
+                print(temp)
+                #cv.line(temp, (ray.start_x, ray.start_y), intersection, 50, 1)
             
             cv.imshow('asdf', temp)
             cv.waitKey(5)
