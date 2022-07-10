@@ -78,8 +78,21 @@ class Ray:
     
     def get_intersection(self):
         try:
-            out = np.argwhere(self.casted == 250)[0]
-            return (out[1], out[0])
+            out = np.argwhere(self.casted == 250)
+            if len(out) == 1:
+                return (out[0, 1], out[0, 0])
+            else:
+                smallest_distance = 1000
+                smallest_d_idx = -1
+                for idx, pt in enumerate(out):
+                    dist = math.sqrt(
+                            math.pow(self.start_x - pt[1], 2) + 
+                            math.pow(self.start_y - pt[0], 2))
+                    if dist < smallest_distance:
+                        smallest_distance = dist
+                        smallest_d_idx = idx
+                return (out[smallest_d_idx, 1],  out[smallest_d_idx, 0])
+
         except IndexError:
             print("No result of intersection for {}".format(self.angle))
             return
@@ -127,7 +140,7 @@ if __name__ == '__main__':
                 ray.cast(road_cont)
                 intersection = ray.get_intersection()
                 print(temp)
-                #cv.line(temp, (ray.start_x, ray.start_y), intersection, 50, 1)
+                cv.line(temp, (ray.start_x, ray.start_y), intersection, 50, 1)
             
             cv.imshow('asdf', temp)
             cv.waitKey(5)
