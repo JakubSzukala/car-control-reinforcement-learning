@@ -8,7 +8,13 @@ import torch.nn as nn
 from torch import optim
 
 from image_extractor import get_screen
-from model import DQN
+
+from distance_extractor import get_state
+from distance_extractor import Ray
+from distance_extractor import CAR_X, CAR_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+
+#from model import DQN_conv
+from model import DQN_fully_conn
 from model import ReplayMemory
 from model import Transition
 
@@ -30,11 +36,22 @@ env.action_space.seed(42)
 observation, info = env.reset(seed=42, return_info=True)
 
 """
+TODO: 
+Make a small fully connected nn.
+Examples:
+    * Trackmania guy did 64 + 16 neurons in hidden layers for 16in 4out
+    * https://github.com/milindmalshe/Fully-Connected-Neural-Network-PyTorch/blob/master/FCN_MNIST_Classification_PyTorch.py
+    * In general it does not matter that much, basically any small / medium size fully connected NN will work
+    * Algorithm is more important for some baseline
+    * Look for ATARI Ram examples or DQN fully connected nn
+"""
+
+"""
 ###############################################################################
 # Initialization of models and training procedure 
 ###############################################################################
 """
-BATCH_SIZE = 128
+BATCH_SIZE = 128 
 GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
@@ -49,10 +66,10 @@ n_actions = env.action_space.n # type: ignore
 
 # https://stackoverflow.com/questions/54237327
 # TODO this channels argument should be improved..
-policy_net = DQN(3, screen_h, screen_w, n_actions, device).to(device)
-target_net = DQN(3, screen_h, screen_w, n_actions, device).to(device)
-target_net.load_state_dict(policy_net.state_dict())
-target_net.eval() # enable evaluation mode
+policy_net = DQN_fully_conn(device).to(device)
+target_net = DQN_fully_conn(device).to(device)
+#target_net.load_state_dict(policy_net.state_dict())
+#target_net.eval() # enable evaluation mode
 
 optimizer = optim.RMSprop(policy_net.parameters())
 memory = ReplayMemory(10000)
@@ -71,8 +88,11 @@ def select_action(state):
     if sample > eps_threshold:
         with torch.no_grad():
             # largest col value of each row
-            return policy_net(state).max(1)[1].view(1, 1)
+            #print("Hi", policy_net(state).max(0)[1].view(1, 1))
+            return policy_net(state).max(0)[1].view(1, 1) # TODO: HERE Problem
+            #return policy_net(state).max(0)[1]#.view(1, 1) # TODO: HERE Problem
     else:
+        print("Random")
         return torch.tensor(
                 [[random.randrange(n_actions)]], 
                 device=device, dtype=torch.long)
@@ -116,8 +136,9 @@ def optimize_model(memory, device, policy_net, target_net, optimizer):
     
     # Compute V(s_{t+1}) for all next states.
     state_action_values = policy_net(state_batch).gather(1, action_batch)
-    next_state_values = torch.zeros(BATCH_SIZE, device=device)
-    next_state_values[non_final_mask] = target_net(
+    next_state_values = torch.zeros(BATCH_SIZE, device=device) 
+     
+    next_state_values[non_final_mask] = target_net( 
             non_final_next_states).max(1)[0].detach()
     
     # Compute the expected Q values
@@ -140,7 +161,6 @@ def queue2frame_stack(deque):
     frame_stack = torch.cat(tuple(deque), 0)
     frame_stack = torch.squeeze(frame_stack, 1)
     frame_stack = torch.unsqueeze(frame_stack, 0)
-    #print(frame_stack.shape)
     # This should probably be in pytorch convention (CHW)? if not transpose?
     return frame_stack
 
@@ -158,6 +178,7 @@ for n_episode in range(90):
     # State is 3 previous frames stacked together and fed to the network
     # Credits: https://github.com/andywu0913/OpenAI-GYM-CarRacing-DQN
     # TODO: improve this, remove hard coding and abstract it
+    """
     state_queue = deque([get_screen(env, as_gray=AS_GRAY)] * 3,
             maxlen=3)
     for t in count():
@@ -191,6 +212,42 @@ for n_episode in range(90):
             # TODO: we do not care about duration.... 
             # that much plot smth more relevant
             #plot_durations()
+            break
+    
+    if n_episode % TARGET_UPDATE == 0:
+        target_net.load_state_dict(policy_net.state_dict())
+    """
+    rays = [
+            Ray(CAR_X, CAR_Y, 0, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, 180, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, -45, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, -135, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, -90, (SCREEN_HEIGHT, SCREEN_WIDTH))
+            ]
+
+    state = get_state(env, rays).float()
+    next_state = None
+    for t in count():
+        print('t: ', t, 'state: ', state)
+        action = select_action(state)
+        print("Action: ", action[0, 0])
+        _, reward, done, _ = env.step(action.item()) # type: ignore
+        reward = torch.tensor([reward], device=device)
+        total_reward += reward
+        
+        if not done:
+            next_state = get_state(env, rays).float()
+
+        memory.push(state, action, next_state, reward)
+
+        state = next_state
+
+        optimize_model(memory, device, policy_net, target_net, optimizer)
+        if done:
+            print('Total reward gained: {}'\
+                  'for episode {}: and duration: {}'.format(
+                      total_reward, n_episode, t+1))
+            episode_durations.append(t + 1)
             break
     
     if n_episode % TARGET_UPDATE == 0:

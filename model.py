@@ -12,6 +12,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 import torchvision.transforms as T
 
+
 """
 ################################################################################
 # Replay Memory 
@@ -44,10 +45,10 @@ class ReplayMemory(object):
 # Model definition 
 ################################################################################
 """
-class DQN(nn.Module):
+class DQN_conv(nn.Module):
     # TODO: this is up for experimentation
     def __init__(self, c, h, w, outputs, device):
-        super(DQN, self).__init__()
+        super(DQN_conv, self).__init__()
         self.conv1 = nn.Conv2d(
                 in_channels=c,   # gray
                 out_channels=16, # arbitrary? 
@@ -71,9 +72,9 @@ class DQN(nn.Module):
         for _ in range(3):
             convw = conv2d_size_out(convw)
             convh = conv2d_size_out(convh)
-            print(convw)
-            print(convh)
-        print('end')
+            #print(convw)
+            #print(convh)
+        #print('end')
 
         linear_input_size = convw * convh * 32
         self.head = nn.Linear(linear_input_size, outputs)
@@ -91,6 +92,28 @@ class DQN(nn.Module):
         x = F.relu(self.bn2(self.conv2(x)))
         x = F.relu(self.bn3(self.conv3(x)))
         return self.head(x.view(x.size(0), -1))  
+
+
+class DQN_fully_conn(nn.Module):
+    def __init__(self, dev):
+        super(DQN_fully_conn, self).__init__()
+        self.device = dev
+        self.linear_relu_stack = nn.Sequential(
+                nn.Linear(5, 16),
+                nn.ReLU(),
+                nn.Linear(16, 32),
+                nn.ReLU(),
+                nn.Linear(32, 32), 
+                nn.ReLU(),
+                nn.Linear(32, 5))
+
+
+    def forward(self, x):
+        #print('X: ', x)
+        x = x.to(self.device)
+        logits = self.linear_relu_stack(x)
+        return logits 
+
 
 """
 ################################################################################

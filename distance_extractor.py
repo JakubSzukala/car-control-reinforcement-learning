@@ -4,6 +4,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 
 import math
+
+import torch 
+from torch.nn.functional import normalize
 """
 Position beams in front of the car - more realistic and less work without 
 removing a car.
@@ -61,8 +64,8 @@ class Ray:
         self.start_y = y
         self.end_x = None
         self.end_y = None
-        self.init_end_x = int(round(1000 * math.cos(math.pi * angle_deg / 180.0))) + self.start_x
-        self.init_end_y = int(round(1000 * math.sin(math.pi * angle_deg / 180.0))) + self.start_y
+        init_end_x = int(round(1000 * math.cos(math.pi * angle_deg / 180.0))) + self.start_x
+        init_end_y = int(round(1000 * math.sin(math.pi * angle_deg / 180.0))) + self.start_y
         self.angle = angle_deg
         self.ray_matrice = np.zeros(img_shape)
         self.casted = None
@@ -71,7 +74,7 @@ class Ray:
         # Draw a line onto the ray_matrice
         cv.line(self.ray_matrice, # Inverted x/y?
                 (self.start_x, self.start_y),
-                (self.init_end_x, self.init_end_y), 125)
+                (init_end_x, init_end_y), 125)
     
     # TODO: make values of pixels as constants
     def cast(self, cont_img):
@@ -105,20 +108,51 @@ class Ray:
 
         except IndexError:
             print("No result of intersection for {}".format(self.angle))
-            return
+            return 
 
     def get_distance_int(self):
-        return int(self.distance)
+        return self.distance
 
     def get_intersection(self):
         return (self.end_x, self.end_y)
 
+
+def get_state_as_list(env, rays: list):
+    # Get and resize the original image
+    screen_original = env.render(mode="rgb_array")
+    screen = screen_original[0:300, :]
+    screen_96_96 = resize(screen)
+
+    # Convert to binary and get contours, draw them
+    binary_screen = get_bin_road(screen_96_96)
+    contours, _ = cv.findContours(binary_screen, cv.RETR_EXTERNAL, 
+            cv.CHAIN_APPROX_SIMPLE) 
+    road_cont = np.zeros(shape=screen_96_96.shape[:2])
+    cv.drawContours(road_cont, contours, -1, 125, 5) # TODO change 125 to constant
+    
+    # Cast rays
+    state = []
+    for ray in rays:
+        ray.cast(road_cont)
+        ray.calculate_intersection()
+        distance = ray.get_distance_int()
+        state.append(distance)
+    return state 
+
+
+def get_state(env, rays: list):
+    state_list = get_state_as_list(env, rays)
+    state_np = np.reshape(np.array(state_list), (1, -1))
+    tensor = normalize(torch.from_numpy(state_np)).squeeze()
+    return tensor
+        
 
 
 if __name__ == '__main__':
     env = gym.make("CarRacing-v1")
     env.reset()
     
+    """
     rays = {
             'ray0' : Ray(CAR_X, CAR_Y, 0, (SCREEN_HEIGHT, SCREEN_WIDTH)),
             'ray_p180' : Ray(CAR_X, CAR_Y, 180, (SCREEN_HEIGHT, SCREEN_WIDTH)),
@@ -160,24 +194,24 @@ if __name__ == '__main__':
             
             cv.imshow('asdf', temp)
             cv.waitKey(5)
-            """
-            fig, axs = plt.subplots(4, 1)
-            fig.suptitle('Processing')
-            
-            axs[0].imshow(screen_original)
-            axs[0].set_title('Original')
-            
-            axs[1].imshow(binary_screen)
-            axs[1].set_title('Road binary')
-            
-            axs[2].imshow(road_cont)
-            axs[2].set_title('Road contour')
-            
-            axs[3].imshow(temp)
-            axs[3].set_title('Intersection')
-            plt.show()
-            """
+    """
+    rays = [
+            Ray(CAR_X, CAR_Y, 0, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, 180, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, -45, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, -135, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, -90, (SCREEN_HEIGHT, SCREEN_WIDTH))
+            ]
 
+    for i in range(1000):
+        if i > FRAMES_2_SKIP:
+            state = get_state_as_list(env, rays)
+            temp = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH))
+            for ray in rays:
+                cv.line(temp, (ray.start_x, ray.start_y), (ray.end_x, ray.end_y), 150)
+            cv.imshow('asdf', temp)
+            cv.waitKey(1)
+        
         env.step(env.action_space.sample())
 
     env.close()
