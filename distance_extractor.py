@@ -143,7 +143,7 @@ def get_state_as_list(env, rays: list):
 def get_state(env, rays: list):
     state_list = get_state_as_list(env, rays)
     state_np = np.reshape(np.array(state_list), (1, -1))
-    tensor = normalize(torch.from_numpy(state_np)).squeeze()
+    tensor = normalize(torch.from_numpy(state_np))
     return tensor
         
 

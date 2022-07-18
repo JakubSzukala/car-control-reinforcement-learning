@@ -2,7 +2,7 @@ from itertools import count
 
 import torch
 import gym
-from model import DQN
+from model import DQN_fully_conn
 from image_extractor import get_screen
 
 AS_GRAY = True

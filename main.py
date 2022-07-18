@@ -84,15 +84,11 @@ def select_action(state):
     eps_threshold = EPS_END + (EPS_START - EPS_END) * \
         math.exp(-1. * steps_done / EPS_DECAY)
     steps_done += 1
-    #print(state.shape)
     if sample > eps_threshold:
         with torch.no_grad():
             # largest col value of each row
-            #print("Hi", policy_net(state).max(0)[1].view(1, 1))
-            return policy_net(state).max(0)[1].view(1, 1) # TODO: HERE Problem
-            #return policy_net(state).max(0)[1]#.view(1, 1) # TODO: HERE Problem
+            return policy_net(state).max(1)[1].view(1, 1) # TODO: HERE Problem
     else:
-        print("Random")
         return torch.tensor(
                 [[random.randrange(n_actions)]], 
                 device=device, dtype=torch.long)
@@ -122,7 +118,6 @@ def optimize_model(memory, device, policy_net, target_net, optimizer):
     if len(memory) < BATCH_SIZE:
         return
     transitions = memory.sample(BATCH_SIZE)
-
     # https://stackoverflow.com/a/19343/3343043
     batch = Transition(*zip(*transitions))
     non_final_mask = torch.tensor(
@@ -228,9 +223,7 @@ for n_episode in range(90):
     state = get_state(env, rays).float()
     next_state = None
     for t in count():
-        print('t: ', t, 'state: ', state)
         action = select_action(state)
-        print("Action: ", action[0, 0])
         _, reward, done, _ = env.step(action.item()) # type: ignore
         reward = torch.tensor([reward], device=device)
         total_reward += reward
