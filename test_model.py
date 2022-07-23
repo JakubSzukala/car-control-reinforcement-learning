@@ -3,7 +3,10 @@ from itertools import count
 import torch
 import gym
 from model import DQN_fully_conn
-from image_extractor import get_screen
+from distance_extractor import get_state
+from distance_extractor import Ray
+from distance_extractor import CAR_X, CAR_Y, SCREEN_HEIGHT, SCREEN_WIDTH
+
 
 AS_GRAY = True
 
@@ -14,37 +17,33 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 env = gym.make('CarRacing-v1', continuous=False)
 
 # Prep model
-init_screen = get_screen(env, as_gray=AS_GRAY)
-_, channels, screen_h, screen_w = init_screen.shape
-n_actions = env.action_space.n # type: ignore 
-
-#model = DQN(channels, screen_h, screen_w, n_actions, device).to(device)
+rays = [
+            Ray(CAR_X, CAR_Y, 0, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, 180, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, -45, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, -135, (SCREEN_HEIGHT, SCREEN_WIDTH)),
+            Ray(CAR_X, CAR_Y, -90, (SCREEN_HEIGHT, SCREEN_WIDTH))
+            ]
 
 model = torch.load("models/target_net.pt")
 model.eval()
 
 env.reset()
-last_screen = get_screen(env, as_gray=AS_GRAY)
-current_screen = get_screen(env, as_gray=AS_GRAY) 
-state = current_screen - last_screen
+state = get_state(env, rays).float()
 
 for t in count():
-    env.render()    
+    env.render()
     with torch.no_grad():
         # largest col value of each row
         action = model(state).max(1)[1].view(1, 1)
+    print(action)
     
     _, reward, done, _ = env.step(action.item())
     reward = torch.tensor([reward], device=device)
     
-    last_screen = current_screen
-    current_screen = get_screen(env, as_gray=AS_GRAY)
-    if not done:
-        next_state = current_screen - last_screen
-    else:
-        next_state = None
+    state = get_state(env, rays).float()
+    print(state)
 
-    state = next_state
     if done:
         print('Done')
         break 

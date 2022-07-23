@@ -56,7 +56,8 @@ GAMMA = 0.999
 EPS_START = 0.9
 EPS_END = 0.05
 EPS_DECAY = 200
-TARGET_UPDATE = 10
+TARGET_UPDATE = 20
+FRAMES_2_SKIP = 10
 
 AS_GRAY = True 
 
@@ -160,7 +161,7 @@ def queue2frame_stack(deque):
     return frame_stack
 
 
-for n_episode in range(90):
+for n_episode in range(300):
     total_reward = 0
 
     # Getting input 
@@ -219,32 +220,40 @@ for n_episode in range(90):
             Ray(CAR_X, CAR_Y, -135, (SCREEN_HEIGHT, SCREEN_WIDTH)),
             Ray(CAR_X, CAR_Y, -90, (SCREEN_HEIGHT, SCREEN_WIDTH))
             ]
-
+    
+    negative_rew_cnt = 0
+    drive_reward_bonus_cnt = 0
     state = get_state(env, rays).float()
     next_state = None
     for t in count():
-        action = select_action(state)
-        _, reward, done, _ = env.step(action.item()) # type: ignore
-        reward = torch.tensor([reward], device=device)
-        total_reward += reward
+        if t > FRAMES_2_SKIP:
+            action = select_action(state)
+            _, reward, done, _ = env.step(action.item()) # type: ignore
+            reward = torch.tensor([reward], device=device)
+            total_reward += reward + 1 if action.item() == 3 else 0
+            
+            if not done:
+                next_state = get_state(env, rays).float()
+
+            negative_rew_cnt = \
+                    negative_rew_cnt + 1 if t > 100 and reward < 0 else 0
+
+            memory.push(state, action, next_state, reward)
+            
+            state = next_state
+
+            optimize_model(memory, device, policy_net, target_net, optimizer)
+            if done or negative_rew_cnt > 25:
+                print('Total reward gained: {}'\
+                      'for episode {}: and duration: {}'.format(
+                          total_reward, n_episode, t+1))
+                episode_durations.append(t + 1)
+                break
         
-        if not done:
-            next_state = get_state(env, rays).float()
-
-        memory.push(state, action, next_state, reward)
-
-        state = next_state
-
-        optimize_model(memory, device, policy_net, target_net, optimizer)
-        if done:
-            print('Total reward gained: {}'\
-                  'for episode {}: and duration: {}'.format(
-                      total_reward, n_episode, t+1))
-            episode_durations.append(t + 1)
-            break
-    
-    if n_episode % TARGET_UPDATE == 0:
-        target_net.load_state_dict(policy_net.state_dict())
+            if n_episode % TARGET_UPDATE == 0:
+                target_net.load_state_dict(policy_net.state_dict())
+        else:
+            env.step(0) # type: ignore
 
 print('Complete')
 env.render()    

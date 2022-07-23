@@ -108,6 +108,7 @@ class Ray:
 
         except IndexError:
             print("No result of intersection for {}".format(self.angle))
+            self.distance = 425.0
             return 
 
     def get_distance_int(self):
