@@ -24,6 +24,7 @@ from itertools import count
 from collections import deque
 import copy
 
+torch.manual_seed(0)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 env = gym.make('CarRacing-v1', continuous=False)
@@ -161,11 +162,12 @@ def queue2frame_stack(deque):
     return frame_stack
 
 
-for n_episode in range(300):
+for n_episode in range(600):
     total_reward = 0
 
     # Getting input 
     env.reset()
+    render = n_episode % 10
     """
     last_screen = get_screen(env, as_gray=AS_GRAY)
     current_screen = get_screen(env, as_gray=AS_GRAY) 
@@ -209,7 +211,7 @@ for n_episode in range(300):
             # that much plot smth more relevant
             #plot_durations()
             break
-    
+
     if n_episode % TARGET_UPDATE == 0:
         target_net.load_state_dict(policy_net.state_dict())
     """
@@ -220,18 +222,36 @@ for n_episode in range(300):
             Ray(CAR_X, CAR_Y, -135, (SCREEN_HEIGHT, SCREEN_WIDTH)),
             Ray(CAR_X, CAR_Y, -90, (SCREEN_HEIGHT, SCREEN_WIDTH))
             ]
-    
+
+    # Count number of episodes where reward was negative
     negative_rew_cnt = 0
-    drive_reward_bonus_cnt = 0
+
+    # If in last 4 actions at least one was 'gas' (3) add reward
+    ACTION_MEMORY_SIZE = 6
+    GAS_ACTION = 3
+    action_memory = []
+
     state = get_state(env, rays).float()
     next_state = None
     for t in count():
+        if render == 0:
+            env.render()
         if t > FRAMES_2_SKIP:
             action = select_action(state)
+            print("state: {}".format(state))
+
+            action_memory.append(action.item())
+            if len(action_memory) > ACTION_MEMORY_SIZE: action_memory.pop(0)
+
             _, reward, done, _ = env.step(action.item()) # type: ignore
             reward = torch.tensor([reward], device=device)
+            #print("Reward: {}".format(reward))
+
+            # Reward calculation
+            #if GAS_ACTION in action_memory:
+            #    total_reward += 1
             total_reward += reward + 1 if action.item() == 3 else 0
-            
+
             if not done:
                 next_state = get_state(env, rays).float()
 
@@ -239,17 +259,17 @@ for n_episode in range(300):
                     negative_rew_cnt + 1 if t > 100 and reward < 0 else 0
 
             memory.push(state, action, next_state, reward)
-            
+
             state = next_state
 
             optimize_model(memory, device, policy_net, target_net, optimizer)
-            if done or negative_rew_cnt > 25:
+            if done: #or negative_rew_cnt > 200:
                 print('Total reward gained: {}'\
                       'for episode {}: and duration: {}'.format(
                           total_reward, n_episode, t+1))
                 episode_durations.append(t + 1)
                 break
-        
+
             if n_episode % TARGET_UPDATE == 0:
                 target_net.load_state_dict(policy_net.state_dict())
         else:

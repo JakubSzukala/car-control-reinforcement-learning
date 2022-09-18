@@ -99,13 +99,23 @@ class DQN_fully_conn(nn.Module):
         super(DQN_fully_conn, self).__init__()
         self.device = dev
         self.linear_relu_stack = nn.Sequential(
-                nn.Linear(5, 16),
+                nn.Linear(5, 8),
                 nn.ReLU(),
-                nn.Linear(16, 32),
+                nn.Linear(8, 8),
                 nn.ReLU(),
-                nn.Linear(32, 32), 
-                nn.ReLU(),
-                nn.Linear(32, 5))
+                nn.Linear(8, 5),
+                nn.ReLU()
+                )
+
+                #nn.linear(5, 16),
+                #nn.relu(),
+                #nn.linear(16, 32),
+                #nn.relu(),
+                #nn.linear(32, 32), 
+                #nn.ReLU(),
+                #nn.Linear(32, 5))
+
+
 
 
     def forward(self, x):
