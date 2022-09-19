@@ -30,13 +30,6 @@ eval_callback = EvalCallback(env,
 model = eval(algorithm)(policy, env, verbose=1)
 model.learn(total_timesteps=800_000, callback=eval_callback)
 
-obs = env.reset()
-for i in range(1000):
-    action, _state = model.predict(obs, deterministic=True)
-    obs, reward, done, info = env.step(action)
-    env.render()
-    if done:
-      obs = env.reset()
 
 # Save final trained model
 filename_final = algorithm + "-" + policy + "-" + date_string + "_final"
