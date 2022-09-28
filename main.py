@@ -8,11 +8,13 @@ from stable_baselines3.a2c.a2c import A2C
 from stable_baselines3.ppo.ppo import PPO
 from stable_baselines3.common.callbacks import EvalCallback
 
-env = gym.make('CarRacing-v2', continuous=False)
-# https://www.kaggle.com/code/scratchpad/notebooke8005fd51b/edit
+from car_racing_env_wrapper import CarRacingDistanceStateWrapper
+root_env = gym.make('CarRacing-v2', continuous=False)
+env = CarRacingDistanceStateWrapper(root_env)
+
 # Parameters
 algorithm = "PPO"
-policy = 'CnnPolicy'
+policy = 'MlpPolicy'
 
 # Get time stamp for output filename
 now = datetime.now()
@@ -24,12 +26,11 @@ filename_best = algorithm + "-" + policy + "-" + date_string + "_best"
 eval_callback = EvalCallback(env,
         best_model_save_path=join('logs', filename_best),
         log_path=join('logs', filename_best),
-        eval_freq=500, deterministic=True, render=False)
+        eval_freq=750, deterministic=True, render=False)
 
 # Model
 model = eval(algorithm)(policy, env, verbose=1)
-model.learn(total_timesteps=800_000, callback=eval_callback)
-
+model.learn(total_timesteps=500_000, callback=eval_callback)
 
 # Save final trained model
 filename_final = algorithm + "-" + policy + "-" + date_string + "_final"
@@ -45,7 +46,7 @@ models.append(Model(eval(algorithm).load(join('logs', filename_best)), 'model_be
 for model in models:
     for i in range(1000):
         print("Current model: ".format(model.model_name))
-        action, _state = model.predict(obs, deterministic=True)
+        action, _state = model.predict(obs, deterministic=True) # type: ignore
         obs, reward, done, info = env.step(action)
         env.render()
         if done:

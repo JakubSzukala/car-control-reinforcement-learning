@@ -60,14 +60,14 @@ def get_bin_road(img):
 class Ray:
     def __init__(self, x, y, angle_deg, img_shape: tuple):
         # Calculate start and end coords for the line 
-        self.start_x = x  
+        self.start_x = x
         self.start_y = y
         self.end_x = None
         self.end_y = None
         init_end_x = int(round(1000 * math.cos(math.pi * angle_deg / 180.0))) + self.start_x
         init_end_y = int(round(1000 * math.sin(math.pi * angle_deg / 180.0))) + self.start_y
         self.angle = angle_deg
-        self.ray_matrice = np.zeros(img_shape)
+        self.ray_matrice = np.zeros(img_shape, dtype=np.uint8)
         self.casted = None
         self.distance = -1
 
@@ -75,44 +75,39 @@ class Ray:
         cv.line(self.ray_matrice, # Inverted x/y?
                 (self.start_x, self.start_y),
                 (init_end_x, init_end_y), 125)
-    
+
     # TODO: make values of pixels as constants
     def cast(self, cont_img):
         self.casted = cv.add(cont_img, self.ray_matrice)
         #plt.imshow(self.casted)
         #plt.show()
-    
+
     def calculate_intersection(self):
-        try:
-            out = np.argwhere(self.casted == 250)
-            if len(out) == 1:
-                self.end_x = out[0, 1]
-                self.end_y = out[0, 0]
-                self.distance = math.sqrt(
-                            math.pow(self.start_x - out[0, 1], 2) + 
-                            math.pow(self.start_y - out[0, 0], 2))
+        out = np.argwhere(self.casted == 250)
+        if len(out) == 1:
+            self.end_x = out[0, 1]
+            self.end_y = out[0, 0]
+            self.distance = math.sqrt(
+                        math.pow(self.start_x - out[0, 1], 2) + 
+                        math.pow(self.start_y - out[0, 0], 2))
 
-            else:
-                smallest_distance = 1000
-                smallest_d_idx = -1
-                for idx, pt in enumerate(out):
-                    dist = math.sqrt(
-                            math.pow(self.start_x - pt[1], 2) + 
-                            math.pow(self.start_y - pt[0], 2))
-                    if dist < smallest_distance:
-                        smallest_distance = dist
-                        smallest_d_idx = idx
-                self.end_x = out[smallest_d_idx, 1]
-                self.end_y = out[smallest_d_idx, 0]
-                self.distance = smallest_distance
+        else:
+            smallest_distance = 1000
+            smallest_d_idx = -1
+            for idx, pt in enumerate(out):
+                dist = math.sqrt(
+                        math.pow(self.start_x - pt[1], 2) + 
+                        math.pow(self.start_y - pt[0], 2))
+                if dist < smallest_distance:
+                    smallest_distance = dist
+                    smallest_d_idx = idx
+            self.end_x = out[smallest_d_idx, 1]
+            self.end_y = out[smallest_d_idx, 0]
+            self.distance = smallest_distance
 
-        except IndexError:
-            print("No result of intersection for {}".format(self.angle))
-            self.distance = 425.0
-            return 
-
+        
     def get_distance_int(self):
-        return self.distance
+        return int(self.distance)
 
     def get_intersection(self):
         return (self.end_x, self.end_y)
@@ -150,7 +145,7 @@ def get_state(env, rays: list):
 
 
 if __name__ == '__main__':
-    env = gym.make("CarRacing-v1")
+    env = gym.make("CarRacing-v2")
     env.reset()
     
     """
@@ -207,6 +202,7 @@ if __name__ == '__main__':
     for i in range(1000):
         if i > FRAMES_2_SKIP:
             state = get_state_as_list(env, rays)
+            print(state)
             temp = np.zeros((SCREEN_HEIGHT, SCREEN_WIDTH))
             for ray in rays:
                 cv.line(temp, (ray.start_x, ray.start_y), (ray.end_x, ray.end_y), 150)
