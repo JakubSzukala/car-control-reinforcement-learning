@@ -8,8 +8,9 @@ import numpy as np
 from gym import spaces
 
 class CarRacingDistanceStateWrapper(gym.Env):
-    def __init__(self, car_racing_env):
+    def __init__(self, car_racing_env, evaluate=False):
         super(CarRacingDistanceStateWrapper, self).__init__()
+        self.evaluate = evaluate
         self.env = car_racing_env
         self.action_space = self.env.action_space
         # Ugly ugly hard coding, barf
@@ -38,9 +39,6 @@ class CarRacingDistanceStateWrapper(gym.Env):
         bin_road = get_bin_road(state)
         
         # Debug
-        temp = np.zeros(state.shape[:2])
-        for ray in self.rays:
-            cv.line(temp, (ray.start_x, ray.start_y), (ray.end_x, ray.end_y), 150)
                 
         # Apply road contours to the image 
         contours, _ = cv.findContours(bin_road, cv.RETR_EXTERNAL, cv.CHAIN_APPROX_SIMPLE)
@@ -48,17 +46,21 @@ class CarRacingDistanceStateWrapper(gym.Env):
         cv.drawContours(road_cont_img, contours, -1, 125, 2) 
         road_cont_img = cv.copyMakeBorder(road_cont_img, 2, 2, 2, 2, cv.BORDER_CONSTANT, value=125)
         road_cont_img = road_cont_img.astype(np.uint8)
-
-        cv.imshow('road_cont_img', road_cont_img)
-        cv.imshow('asdf', temp)
-        cv.waitKey(1)
-
+        
         state_as_distance = []
         for ray in self.rays:
             ray.cast(road_cont_img)
             ray.calculate_intersection()
             state_as_distance.append(ray.get_distance_int())
         new_state = np.array(state_as_distance, dtype=np.int16)
+        
+        if self.evaluate:
+            self.dist_vis = np.zeros(state.shape[:2])
+            cv.drawContours(self.dist_vis, contours, -1, 125, 2)
+            for ray in self.rays:
+                cv.line(self.dist_vis, (ray.start_x, ray.start_y), (ray.end_x, ray.end_y), 150)
+            self.dist_vis = self.dist_vis.astype(np.uint8)
+        
         return new_state, reward, done, info
 
     def reset(self):
